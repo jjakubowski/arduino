@@ -2,7 +2,7 @@
 #define USART_H_
 
 
-//#define F_CPU 4915200
+#define F_CPU 16000000
 #define BAUD 19200
 
 #define MY_UBRR (F_CPU/16)/BAUD-1

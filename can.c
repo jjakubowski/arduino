@@ -30,7 +30,7 @@ uint8_t CanInit(void)
 	//	printf("Eror - MCP2515 NOT in config mode after rst! \n\r");
 		return -1;
 	}
-	MCPmodify(MODE_LOOPBACK, MODE_MASK, MCP_CANCTRL);
+	MCPmodify(MODE_NORMAL, MODE_MASK, MCP_CANCTRL);
 	
 	MCPwrite(MCP_RX_INT, MCP_CANINTE);
 	DeselectSlave();
@@ -55,7 +55,7 @@ void CanSendMsg(can_message_t* message,uint8_t buffer)
 	MCPloadTX(block, MCP_LOAD_TX0+buffer*2, 5, NONE);
 	MCPloadTX(message->data, MCP_LOAD_TX0+buffer*2, message->length, ONLY_DATA);
 	
-	MCPrequest(MCP_RTS | (1<<(buffer-1)) );
+	MCPrequest(MCP_RTS | (1<<buffer) );
 }
 
 /**

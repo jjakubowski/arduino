@@ -1,3 +1,5 @@
+
+#define F_CPU 16000000
 #include <avr/io.h>
 #include <util/delay.h>
 #include "usart.h"
@@ -8,16 +10,19 @@
 #include "spi.h"
 #include <avr/interrupt.h>
 #include "stdlib.h"
+#include "pwm.h"
 
 
 can_message_t message_rx;
 can_message_t message_tx;
 
-uint8_t Done_flag;
+volatile uint8_t Done_flag;
 
 
 void print_str(char *str);
 void print_num(uint16_t num);
+
+
 
 
 int main(void)
@@ -26,11 +31,12 @@ int main(void)
 
 	uint8_t temp;
 	int i;
+	signed int X,Y;
 
 	USART_Init(MY_UBRR);
-	USART_Transmit(0x01);
-	USART_Transmit(6+CanInit());
-	USART_Transmit(0x02);
+	PWM_init();
+	CanInit();
+	
 	sei();
 	Done_flag=0;
 
@@ -47,7 +53,7 @@ int main(void)
 	message_tx.length =4;
 
 
-	CanSendMsg(&message_tx,0);
+	
 	//	_delay_ms(3000);
 	//	USART_Transmit(MCPread(0x0E));
 	//
@@ -58,40 +64,24 @@ int main(void)
 	//	USART_Transmit('\n');
 	//	}
 	while(1){
-
-		//	PORTB^=(1<<PB7);
-		//		USART_Transmit('H');
-		//		USART_Transmit('e');
-		//		USART_Transmit('l');
-		//		USART_Transmit('l');
-		//		USART_Transmit('o');
-		//		USART_Transmit('\r');
-		//		USART_Transmit('\n');
-		_delay_ms(500);
-		//		USART_Transmit(0x55);
-		//		USART_Transmit(MCPstatus());
-		//	print_str("Value -");
-		//	print_num(global_status);
-
-
-		if(Done_flag)
+		
+		if(Done_flag == 1)
 		{
-			for(i=0;i<6;i++){
-				PORTB^=(1<<PB7);
-				_delay_ms(100);
-			}
-			print_str("\r\ndlugosc -");
-			print_num(message_rx.length);
-			print_str("\r\nid -");
-			print_num(message_rx.id);
-			print_str("\r\nd1 -");
-			print_num(message_rx.data[0]);
-			print_str("\r\nd2 -");
-			print_num(message_rx.data[1]);
-			print_str("\r\nd3 -");
-			print_num(message_rx.data[2]);
-			print_str("\r\nd4 -");
-			print_num(message_rx.data[3]);
+		
+			
+			X=message_rx.data[0];
+			Y=message_rx.data[1];
+					
+			print_str("\r\nX -");
+			print_num(X);
+			print_str("  Y -");
+			print_num(Y);
+			if(Y>0) PWM_increase(1);
+			else if (Y<0) PWM_decrease(1);
+			Done_flag =0;
+			
+			
+			
 		}
 	}
 
@@ -120,7 +110,7 @@ ISR(INT4_vect)
 	uint8_t status;
 
 	status = MCPstatus();
-
+	
 	if(status & (1<<1)) CanReceiveMsg(&message_rx,1);
 	else if(status & (1<<0)) CanReceiveMsg(&message_rx,0);
 	Done_flag=1;
