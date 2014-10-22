@@ -20,7 +20,7 @@ volatile uint8_t Done_flag;
 
 
 void print_str(char *str);
-void print_num(uint16_t num);
+void print_num(uint16_t num,uint8_t base);
 
 
 
@@ -31,7 +31,7 @@ int main(void)
 
 	uint8_t temp;
 	int i;
-	signed int X,Y;
+	int8_t X,Y;
 
 	USART_Init(MY_UBRR);
 	PWM_init();
@@ -70,15 +70,16 @@ int main(void)
 		
 			
 			X=message_rx.data[0];
-			Y=message_rx.data[1];
+			Y=(int8_t) message_rx.data[1];
 					
-			print_str("\r\nX -");
-			print_num(X);
-			print_str("  Y -");
-			print_num(Y);
-			if(Y>0) PWM_increase(1);
-			else if (Y<0) PWM_decrease(1);
-			Done_flag =0;
+			//print_str("\r\nX ");
+			//print_num(X,10);
+			//print_str("  Y ");
+			//print_num(Y,10);
+			if(Y>0) { /*print_str("+");  */PWM_increase(abs(Y)/4);}
+			else if (Y<0){ /*print_str("-");*/PWM_decrease(abs(Y)/4);}
+			//Done_flag =0;
+			print_num(OCR3C,10);
 			
 			
 			
@@ -97,13 +98,15 @@ void print_str(char *str)
 	}
 }
 
-void print_num(uint16_t num)
+void print_num(uint16_t num,uint8_t base)
 {
 	char buff[5];
 
-	itoa(num,buff,16);
+	itoa(num,buff,base);
 	print_str(buff);
 }
+
+
 
 ISR(INT4_vect)
 {
